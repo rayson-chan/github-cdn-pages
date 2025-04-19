@@ -143,6 +143,9 @@
     </p>
 
     <script>
+        // Get the current domain dynamically from the browser
+        const currentDomain = window.location.origin;
+
         function transformUrl() {
             const githubUrl = document.getElementById('githubUrlInput').value.trim();
             if (!githubUrl) return;
@@ -165,20 +168,25 @@
                     throw new Error('URL must be a GitHub repository file URL');
                 }
 
-                // Generate different formats
-                const shortFormat = `/gh/${username}/${repo}/${branch}/${filePath}`;
-                const rawFormat = `/raw/${username}/${repo}/${branch}/${filePath}`;
-                const directRawFormat = `/https://raw.githubusercontent.com/${username}/${repo}/${branch}/${filePath}`;
+                // Generate different formats with relative paths
+                const shortFormatPath = `/gh/${username}/${repo}/${branch}/${filePath}`;
+                const rawFormatPath = `/raw/${username}/${repo}/${branch}/${filePath}`;
+                const directRawFormatPath = `/https://raw.githubusercontent.com/${username}/${repo}/${branch}/${filePath}`;
 
-                // Display results
-                document.getElementById('shortFormat').textContent = shortFormat;
-                document.getElementById('shortFormat').href = shortFormat;
+                // Generate full URLs with domain
+                const shortFormatFull = `${currentDomain}${shortFormatPath}`;
+                const rawFormatFull = `${currentDomain}${rawFormatPath}`;
+                const directRawFormatFull = `${currentDomain}${directRawFormatPath}`;
 
-                document.getElementById('rawFormat').textContent = rawFormat;
-                document.getElementById('rawFormat').href = rawFormat;
+                // Display results with full URLs
+                document.getElementById('shortFormat').textContent = shortFormatFull;
+                document.getElementById('shortFormat').href = shortFormatPath;
 
-                document.getElementById('directRawFormat').textContent = directRawFormat;
-                document.getElementById('directRawFormat').href = directRawFormat;
+                document.getElementById('rawFormat').textContent = rawFormatFull;
+                document.getElementById('rawFormat').href = rawFormatPath;
+
+                document.getElementById('directRawFormat').textContent = directRawFormatFull;
+                document.getElementById('directRawFormat').href = directRawFormatPath;
 
                 document.getElementById('results').style.display = 'block';
 
