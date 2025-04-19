@@ -11,9 +11,50 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const path = url.pathname;
   
+  // Debug log
+  console.log("Requested path:", path);
+  
   // If path is just "/" or empty, serve the static page
   if (path === "/" || path === "") {
     return context.next();
+  }
+  
+  // Special case for the specific URL pattern that's failing
+  if (path.includes('/https://raw.githubusercontent.com/')) {
+    // Extract full GitHub URL - directly taking everything from '/https://' onwards
+    let githubUrl = path.substring(path.indexOf('/https://') + 1);
+    
+    console.log("Extracted GitHub URL:", githubUrl);
+    
+    try {
+      // Fetch from GitHub with auth token
+      const response = await fetch(githubUrl, {
+        headers: {
+          'Authorization': `token ${GITHUB_TOKEN}`,
+          'User-Agent': 'GitHub-CDN-Worker'
+        }
+      });
+      
+      if (!response.ok) {
+        return new Response(`GitHub API error: ${response.status} ${response.statusText}`, { 
+          status: response.status 
+        });
+      }
+      
+      // Stream the response
+      const contentType = response.headers.get('content-type') || 'text/plain';
+      
+      // Set cache headers
+      const headers = new Headers({
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=1800', // Cache for 30 minutes
+        'Access-Control-Allow-Origin': '*'
+      });
+      
+      return new Response(response.body, { headers });
+    } catch (error) {
+      return new Response(`Error fetching content: ${error.message}\nPath: ${path}\nExtracted URL: ${githubUrl}`, { status: 500 });
+    }
   }
   
   // Handle GitHub release download URLs
@@ -100,47 +141,6 @@ export async function onRequest(context) {
     }
   }
   
-  // Direct raw URL format
-  // Example: /https://raw.githubusercontent.com/username/repo/branch/file_path
-  if (path.match(/^\/https?:\/\/raw\.githubusercontent\.com\//)) {
-    // Extract the GitHub URL while handling potential encoding issues
-    const githubUrl = path.startsWith('//') 
-      ? 'https:' + path
-      : path.startsWith('/http') 
-        ? path.slice(1) // Remove the leading slash
-        : 'https://raw.githubusercontent.com' + path;
-    
-    try {
-      // Fetch from GitHub with auth token
-      const response = await fetch(githubUrl, {
-        headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'User-Agent': 'GitHub-CDN-Worker'
-        }
-      });
-      
-      if (!response.ok) {
-        return new Response(`GitHub API error: ${response.status} ${response.statusText}`, { 
-          status: response.status 
-        });
-      }
-      
-      // Stream the response
-      const contentType = response.headers.get('content-type') || 'text/plain';
-      
-      // Set cache headers
-      const headers = new Headers({
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=1800', // Cache for 30 minutes
-        'Access-Control-Allow-Origin': '*'
-      });
-      
-      return new Response(response.body, { headers });
-    } catch (error) {
-      return new Response(`Error fetching content: ${error.message}`, { status: 500 });
-    }
-  }
-  
   // Original /gh/ format
   if (path.startsWith('/gh/')) {
     // Extract repo details from path
@@ -194,8 +194,8 @@ export async function onRequest(context) {
     }
   }
   
-  // If no format matches, return error with usage instructions
-  return new Response('Invalid path. Use one of the following formats:\n' +
+  // If no format matches, return error with usage instructions and debug info
+  return new Response(`Invalid path: ${path}\n\nUse one of the following formats:\n` +
     '1. /gh/username/repo/branch/file_path\n' +
     '2. /raw/username/repo/branch/file_path\n' +
     '3. /releases/username/repo/download/tag/filename\n' +

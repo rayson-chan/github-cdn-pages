@@ -16,6 +16,48 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     
+    // Debug log
+    console.log("Requested path:", path);
+    
+    // Special case for the specific URL pattern that's failing
+    if (path.includes('/https://raw.githubusercontent.com/')) {
+      // Extract full GitHub URL - directly taking everything from '/https://' onwards
+      let githubUrl = path.substring(path.indexOf('/https://') + 1);
+      
+      console.log("Extracted GitHub URL:", githubUrl);
+      
+      try {
+        // Fetch from GitHub with auth token
+        const response = await fetch(githubUrl, {
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'User-Agent': 'GitHub-CDN-Worker'
+          }
+        });
+        
+        if (!response.ok) {
+          return new Response(`GitHub API error: ${response.status} ${response.statusText}`, { 
+            status: response.status 
+          });
+        }
+        
+        // Get file content and content type
+        const content = await response.arrayBuffer();
+        const contentType = response.headers.get('content-type') || 'text/plain';
+        
+        // Set cache headers
+        const headers = new Headers({
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=1800', // Cache for 30 minutes
+          'Access-Control-Allow-Origin': '*'
+        });
+        
+        return new Response(content, { headers });
+      } catch (error) {
+        return new Response(`Error fetching content: ${error.message}\nPath: ${path}\nExtracted URL: ${githubUrl}`, { status: 500 });
+      }
+    }
+    
     // Handle GitHub release download URLs
     // Format: /releases/username/repo/download/tag/filename
     if (path.match(/^\/releases\/([^\/]+)\/([^\/]+)\/download\/.+/)) {
@@ -99,43 +141,6 @@ export default {
         } catch (error) {
           return new Response(`Error fetching raw content: ${error.message}`, { status: 500 });
         }
-      }
-    }
-    
-    // Direct raw URL format
-    // Example: /https://raw.githubusercontent.com/username/repo/branch/file_path
-    if (path.startsWith('/https://raw.githubusercontent.com/')) {
-      const githubUrl = 'https://' + path.slice(1); // Remove the leading slash
-      
-      try {
-        // Fetch from GitHub with auth token
-        const response = await fetch(githubUrl, {
-          headers: {
-            'Authorization': `token ${GITHUB_TOKEN}`,
-            'User-Agent': 'GitHub-CDN-Worker'
-          }
-        });
-        
-        if (!response.ok) {
-          return new Response(`GitHub API error: ${response.status} ${response.statusText}`, { 
-            status: response.status 
-          });
-        }
-        
-        // Get file content and content type
-        const content = await response.arrayBuffer();
-        const contentType = response.headers.get('content-type') || 'text/plain';
-        
-        // Set cache headers
-        const headers = new Headers({
-          'Content-Type': contentType,
-          'Cache-Control': 'public, max-age=1800', // Cache for 30 minutes
-          'Access-Control-Allow-Origin': '*'
-        });
-        
-        return new Response(content, { headers });
-      } catch (error) {
-        return new Response(`Error fetching content: ${error.message}`, { status: 500 });
       }
     }
     
@@ -235,8 +240,8 @@ export default {
       });
     }
     
-    // If no format matches, return error with usage instructions
-    return new Response('Invalid path. Use one of the following formats:\n' +
+    // If no format matches, return error with usage instructions and debug info
+    return new Response(`Invalid path: ${path}\n\nUse one of the following formats:\n` +
       '1. /gh/username/repo/branch/file_path\n' +
       '2. /raw/username/repo/branch/file_path\n' +
       '3. /releases/username/repo/download/tag/filename\n' +
