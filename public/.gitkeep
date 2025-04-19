@@ -1,0 +1,2 @@
+# This file ensures that the public directory is tracked by Git
+# The public directory is used for Cloudflare Pages deployment

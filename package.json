@@ -1,0 +1,24 @@
+{
+  "name": "github-cdn-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for proxying GitHub content, providing access to repositories and releases in wonderland",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "publish": "wrangler publish"
+  },
+  "keywords": [
+    "github",
+    "cdn",
+    "proxy",
+    "cloudflare",
+    "worker",
+    "github-releases",
+    "github-raw"
+  ],
+  "author": "Rayson",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

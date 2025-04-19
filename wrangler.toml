@@ -1,0 +1,16 @@
+name = "github-cdn-worker"
+main = "src/index.js"
+compatibility_date = "2023-10-16"
+
+# For Cloudflare Pages deployment
+[site]
+bucket = "./public"
+
+[vars]
+# Define public variables here (do NOT include secrets here)
+# These will be included in your published worker
+
+# [secrets]
+# GITHUB_TOKEN
+# The GITHUB_TOKEN secret should be set using the Cloudflare Dashboard or CLI
+# Do not include the actual token in this file
