@@ -1,3 +1,5 @@
+// /src/index.js
+
 /**
  * GitHub CDN Worker
  * 

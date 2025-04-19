@@ -1,3 +1,5 @@
+// /functions/_middleware.js
+
 // Cloudflare Pages Function - Middleware to handle all GitHub CDN requests
 // This file must be placed in a "functions" directory at the project root
 
@@ -100,8 +102,13 @@ export async function onRequest(context) {
   
   // Direct raw URL format
   // Example: /https://raw.githubusercontent.com/username/repo/branch/file_path
-  if (path.startsWith('/https://raw.githubusercontent.com/')) {
-    const githubUrl = 'https://' + path.slice(1); // Remove the leading slash
+  if (path.match(/^\/https?:\/\/raw\.githubusercontent\.com\//)) {
+    // Extract the GitHub URL while handling potential encoding issues
+    const githubUrl = path.startsWith('//') 
+      ? 'https:' + path
+      : path.startsWith('/http') 
+        ? path.slice(1) // Remove the leading slash
+        : 'https://raw.githubusercontent.com' + path;
     
     try {
       // Fetch from GitHub with auth token
