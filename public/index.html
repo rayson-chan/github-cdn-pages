@@ -44,6 +44,59 @@
         a:hover {
             text-decoration: underline;
         }
+
+        .button {
+            display: inline-block;
+            background-color: #2ea44f;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            text-align: center;
+            cursor: pointer;
+            margin: 10px 5px;
+            border: none;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background-color: #2c974b;
+            text-decoration: none;
+        }
+
+        .test-link-section {
+            background-color: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .results {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .format-result {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .format-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        #githubUrlInput {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+        }
     </style>
 </head>
 
@@ -51,22 +104,92 @@
     <h1>GitHub CDN Worker</h1>
     <p>A proxy service for GitHub content that works in wonderland.</p>
 
-    <h2>Supported URL Formats:</h2>
+    <div class="test-link-section">
+        <h2>Test URL Formatter</h2>
+        <p>Enter a GitHub URL or use the example to see how it transforms into different CDN formats.</p>
 
+        <input type="text" id="githubUrlInput" value="https://github.com/octocat/Hello-World/blob/master/README"
+            placeholder="Enter a GitHub URL (e.g., https://github.com/username/repo/blob/branch/path)">
+
+        <button class="button" onclick="transformUrl()">Transform URL</button>
+
+        <div id="results" class="results">
+            <h3>Transformed URLs:</h3>
+            <div class="format-result">
+                <div class="format-title">Short Format:</div>
+                <a id="shortFormat" href="#" target="_blank"></a>
+            </div>
+            <div class="format-result">
+                <div class="format-title">Raw File Format:</div>
+                <a id="rawFormat" href="#" target="_blank"></a>
+            </div>
+            <div class="format-result">
+                <div class="format-title">Direct Raw GitHub URL:</div>
+                <a id="directRawFormat" href="#" target="_blank"></a>
+            </div>
+        </div>
+    </div>
+
+    <h2>Supported URL Formats:</h2>
     <h3>1. Short Format:</h3>
     <pre><code>/gh/username/repo/branch/file_path</code></pre>
-
     <h3>2. Raw File Format:</h3>
     <pre><code>/raw/username/repo/branch/file_path</code></pre>
-
     <h3>3. GitHub Releases Download Format:</h3>
     <pre><code>/releases/username/repo/download/tag/filename</code></pre>
-
     <h3>4. Direct Raw GitHub URL:</h3>
     <pre><code>/https://raw.githubusercontent.com/username/repo/branch/file_path</code></pre>
-
     <p>For more information, visit <a href="https://github.com/rayson-chan/github-cdn-worker">the GitHub repository</a>.
     </p>
+
+    <script>
+        function transformUrl() {
+            const githubUrl = document.getElementById('githubUrlInput').value.trim();
+            if (!githubUrl) return;
+
+            // Parse GitHub URL
+            let username, repo, branch, filePath;
+
+            try {
+                // Handle github.com URLs
+                if (githubUrl.includes('github.com')) {
+                    const regex = /https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)/;
+                    const match = githubUrl.match(regex);
+
+                    if (match) {
+                        [, username, repo, branch, filePath] = match;
+                    } else {
+                        throw new Error('Invalid GitHub URL format');
+                    }
+                } else {
+                    throw new Error('URL must be a GitHub repository file URL');
+                }
+
+                // Generate different formats
+                const shortFormat = `/gh/${username}/${repo}/${branch}/${filePath}`;
+                const rawFormat = `/raw/${username}/${repo}/${branch}/${filePath}`;
+                const directRawFormat = `/https://raw.githubusercontent.com/${username}/${repo}/${branch}/${filePath}`;
+
+                // Display results
+                document.getElementById('shortFormat').textContent = shortFormat;
+                document.getElementById('shortFormat').href = shortFormat;
+
+                document.getElementById('rawFormat').textContent = rawFormat;
+                document.getElementById('rawFormat').href = rawFormat;
+
+                document.getElementById('directRawFormat').textContent = directRawFormat;
+                document.getElementById('directRawFormat').href = directRawFormat;
+
+                document.getElementById('results').style.display = 'block';
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Run transformation on page load with the default URL
+        document.addEventListener('DOMContentLoaded', transformUrl);
+    </script>
 </body>
 
 </html>
