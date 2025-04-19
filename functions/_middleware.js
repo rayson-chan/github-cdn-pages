@@ -12,7 +12,7 @@ export async function onRequest(context) {
   const path = url.pathname;
   
   // Debug log
-  console.log("Requested path:", path);
+  console.log("Middleware - Requested path:", path);
   
   // If path is just "/" or empty, serve the static page
   if (path === "/" || path === "") {
@@ -24,7 +24,7 @@ export async function onRequest(context) {
     // Extract full GitHub URL - directly taking everything from '/https://' onwards
     let githubUrl = path.substring(path.indexOf('/https://') + 1);
     
-    console.log("Extracted GitHub URL:", githubUrl);
+    console.log("Middleware - Extracted GitHub URL:", githubUrl);
     
     try {
       // Fetch from GitHub with auth token
@@ -41,7 +41,7 @@ export async function onRequest(context) {
         });
       }
       
-      // Stream the response
+      // Get the response as a stream instead of buffering (more efficient)
       const contentType = response.headers.get('content-type') || 'text/plain';
       
       // Set cache headers
@@ -51,14 +51,16 @@ export async function onRequest(context) {
         'Access-Control-Allow-Origin': '*'
       });
       
+      // Important: Use the response body directly to stream the content
       return new Response(response.body, { headers });
     } catch (error) {
       return new Response(`Error fetching content: ${error.message}\nPath: ${path}\nExtracted URL: ${githubUrl}`, { status: 500 });
     }
   }
   
+  // Rest of the handlers remain the same...
+  
   // Handle GitHub release download URLs
-  // Format: /releases/username/repo/download/tag/filename
   if (path.match(/^\/releases\/([^\/]+)\/([^\/]+)\/download\/.+/)) {
     const matches = path.match(/^\/releases\/([^\/]+)\/([^\/]+)\/download\/(.+)/);
     if (matches && matches.length === 4) {
@@ -66,7 +68,6 @@ export async function onRequest(context) {
       const githubUrl = `https://github.com/${username}/${repo}/releases/download/${releasePathAndFile}`;
       
       try {
-        // Fetch from GitHub with auth token
         const response = await fetch(githubUrl, {
           headers: {
             'Authorization': `token ${GITHUB_TOKEN}`,
@@ -80,13 +81,11 @@ export async function onRequest(context) {
           });
         }
         
-        // Stream the response without buffering the entire file
         const contentType = response.headers.get('content-type') || 'application/octet-stream';
         
-        // Set cache headers
         const headers = new Headers({
           'Content-Type': contentType,
-          'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
+          'Cache-Control': 'public, max-age=86400',
           'Access-Control-Allow-Origin': '*'
         });
         
@@ -97,8 +96,7 @@ export async function onRequest(context) {
     }
   }
   
-  // Handle raw file URLs with simplified format
-  // Format: /raw/username/repo/branch/filepath
+  // Handle raw file URLs
   if (path.startsWith('/raw/')) {
     const parts = path.slice(5).split('/');
     if (parts.length >= 3) {
@@ -110,7 +108,6 @@ export async function onRequest(context) {
       const githubUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/${filePath}`;
       
       try {
-        // Fetch from GitHub with auth token
         const response = await fetch(githubUrl, {
           headers: {
             'Authorization': `token ${GITHUB_TOKEN}`,
@@ -124,13 +121,11 @@ export async function onRequest(context) {
           });
         }
         
-        // Stream the response
         const contentType = response.headers.get('content-type') || 'text/plain';
         
-        // Set cache headers
         const headers = new Headers({
           'Content-Type': contentType,
-          'Cache-Control': 'public, max-age=1800', // Cache for 30 minutes
+          'Cache-Control': 'public, max-age=1800',
           'Access-Control-Allow-Origin': '*'
         });
         
@@ -143,7 +138,6 @@ export async function onRequest(context) {
   
   // Original /gh/ format
   if (path.startsWith('/gh/')) {
-    // Extract repo details from path
     const parts = path.slice(4).split('/');
     if (parts.length < 3) {
       return new Response('Invalid path format. Use /gh/username/repo/branch/file_path', { status: 400 });
@@ -154,17 +148,14 @@ export async function onRequest(context) {
     let branch = parts[2];
     let filePath = parts.slice(3).join('/');
     
-    // Handle case where user included "blob/" in the URL (GitHub web UI format)
     if (branch === "blob" && parts.length > 3) {
       branch = parts[3];
       filePath = parts.slice(4).join('/');
     }
     
-    // Construct GitHub raw URL
     const githubUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/${filePath}`;
     
     try {
-      // Fetch from GitHub with auth token for private repos
       const response = await fetch(githubUrl, {
         headers: {
           'Authorization': `token ${GITHUB_TOKEN}`,
@@ -178,13 +169,11 @@ export async function onRequest(context) {
         });
       }
       
-      // Stream the response
       const contentType = response.headers.get('content-type') || 'text/plain';
       
-      // Set cache headers
       const headers = new Headers({
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=1800', // Cache for 30 minutes
+        'Cache-Control': 'public, max-age=1800',
         'Access-Control-Allow-Origin': '*'
       });
       
@@ -194,7 +183,7 @@ export async function onRequest(context) {
     }
   }
   
-  // If no format matches, return error with usage instructions and debug info
+  // If no format matches, return error with usage instructions
   return new Response(`Invalid path: ${path}\n\nUse one of the following formats:\n` +
     '1. /gh/username/repo/branch/file_path\n' +
     '2. /raw/username/repo/branch/file_path\n' +
