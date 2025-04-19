@@ -1,0 +1,5 @@
+{
+  "name": "github-cdn-worker",
+  "pages_build_output_dir": "./public",
+  "vars": {}
+}
