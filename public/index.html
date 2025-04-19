@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub CDN Worker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Monaco, Consolas, "Andale Mono", monospace;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        h1,
+        h2,
+        h3 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>GitHub CDN Worker</h1>
+    <p>A proxy service for GitHub content that works in wonderland.</p>
+
+    <h2>Supported URL Formats:</h2>
+
+    <h3>1. Short Format:</h3>
+    <pre><code>/gh/username/repo/branch/file_path</code></pre>
+
+    <h3>2. Raw File Format:</h3>
+    <pre><code>/raw/username/repo/branch/file_path</code></pre>
+
+    <h3>3. GitHub Releases Download Format:</h3>
+    <pre><code>/releases/username/repo/download/tag/filename</code></pre>
+
+    <h3>4. Direct Raw GitHub URL:</h3>
+    <pre><code>/https://raw.githubusercontent.com/username/repo/branch/file_path</code></pre>
+
+    <p>For more information, visit <a href="https://github.com/rayson-chan/github-cdn-worker">the GitHub repository</a>.
+    </p>
+</body>
+
+</html>

@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "wrangler dev",
-    "publish": "wrangler publish"
+    "publish": "wrangler publish",
+    "build": "echo 'No build step required' && mkdir -p public"
   },
   "keywords": [
     "github",
