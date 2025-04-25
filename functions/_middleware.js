@@ -44,10 +44,12 @@ export async function onRequest(context) {
       // Get the response as a stream instead of buffering (more efficient)
       const contentType = response.headers.get('content-type') || 'text/plain';
       
-      // Set cache headers
+      // Set no-cache headers
       const headers = new Headers({
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=1800', // Cache for 30 minutes
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         'Access-Control-Allow-Origin': '*'
       });
       
@@ -85,7 +87,9 @@ export async function onRequest(context) {
         
         const headers = new Headers({
           'Content-Type': contentType,
-          'Cache-Control': 'public, max-age=86400',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
           'Access-Control-Allow-Origin': '*'
         });
         
