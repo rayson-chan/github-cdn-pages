@@ -17,7 +17,7 @@
     "github-releases",
     "github-raw"
   ],
-  "author": "Rayson",
+  "author": "",
   "license": "MIT",
   "devDependencies": {
     "wrangler": "^3.0.0"

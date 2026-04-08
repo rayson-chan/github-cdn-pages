@@ -24,7 +24,7 @@ https://your-worker.domain/gh/username/repo/branch/path/to/file
 
 Example:
 ```
-https://cdn.example.com/gh/rayson-chan/repo-name/main/config.ini
+https://cdn.example.com/gh/username/repo-name/main/config.ini
 ```
 
 ### 2. Raw File Format (via /raw/)
@@ -35,7 +35,7 @@ https://your-worker.domain/raw/username/repo/branch/path/to/file
 
 Example:
 ```
-https://cdn.example.com/raw/rayson-chan/repo-name/main/config.ini
+https://cdn.example.com/raw/username/repo-name/main/config.ini
 ```
 
 ### 3. GitHub Releases Download Format
@@ -46,7 +46,7 @@ https://your-worker.domain/releases/username/repo/download/tag/filename
 
 Example:
 ```
-https://cdn.example.com/releases/rayson-chan/repo-name/download/v1.0.0/app.zip
+https://cdn.example.com/releases/username/repo-name/download/v1.0.0/app.zip
 ```
 
 ### 4. Direct Raw GitHub URL
@@ -59,7 +59,7 @@ https://your-worker.domain/https://raw.githubusercontent.com/username/repo/branc
 
 Example:
 ```
-https://cdn.example.com/https://raw.githubusercontent.com/rayson-chan/repo-name/main/config.ini
+https://cdn.example.com/https://raw.githubusercontent.com/username/repo-name/main/config.ini
 ```
 
 ### 5. URL with Blob (GitHub Web UI Format)
@@ -72,7 +72,7 @@ https://your-worker.domain/gh/username/repo/blob/branch/path/to/file
 
 Example:
 ```
-https://cdn.example.com/gh/rayson-chan/repo-name/blob/main/config.ini
+https://cdn.example.com/gh/username/repo-name/blob/main/config.ini
 ```
 
 ## Deployment Options

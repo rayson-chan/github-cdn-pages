@@ -229,7 +229,7 @@ export default {
             <h3>4. Direct Raw GitHub URL:</h3>
             <pre><code>https://${url.hostname}/https://raw.githubusercontent.com/username/repo/branch/file_path</code></pre>
             
-            <p>For more information, visit <a href="https://github.com/rayson-chan/github-cdn-worker">the GitHub repository</a>.</p>
+            <p>For more information, visit the GitHub repository for this project.</p>
           </body>
         </html>
       `, { 
