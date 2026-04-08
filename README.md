@@ -8,13 +8,45 @@ A Cloudflare Worker that serves as a CDN for GitHub repositories, enabling acces
 - Access GitHub release downloads
 - Works in wonderland
 - Multiple URL formats for flexibility
+- Per-user / per-organization token routing via a single JSON environment variable
 - Performance benefits of Cloudflare's global edge network
 - Proper caching for improved performance
 - Handles binary files correctly
 
-## URL Formats
+## Token Configuration
 
-This CDN supports the following URL formats:
+The worker resolves the GitHub token in this order:
+
+1. **`GITHUB_TOKENS`** (recommended) – a JSON string mapping each GitHub username or organization to its own token.
+2. **`GITHUB_TOKEN`** – single-token fallback used when no per-user match is found.
+
+### Using `GITHUB_TOKENS` (multi-account, recommended)
+
+In the Cloudflare Worker dashboard go to **Settings → Variables** and add:
+
+| Variable name   | Type   | Value                                      |
+|-----------------|--------|--------------------------------------------|
+| `GITHUB_TOKENS` | Secret | *(JSON string, see below)*                 |
+
+Value example:
+
+```json
+{
+  "user1": "ghp_token_for_user1",
+  "user2": "ghp_token_for_user2",
+  "my-organization": "ghp_token_for_org"
+}
+```
+
+The worker extracts the username from every incoming request path and looks it up in this map automatically. If the username is not found in the map, it falls back to `GITHUB_TOKEN`.
+
+### Using `GITHUB_TOKEN` (single-account fallback)
+
+| Variable name  | Type   | Value                          |
+|----------------|--------|--------------------------------|
+| `GITHUB_TOKEN` | Secret | `ghp_your_personal_access_token` |
+
+## URL Formats
 
 ### 1. Short Format (via /gh/)
 
@@ -82,35 +114,14 @@ https://cdn.example.com/gh/username/repo-name/blob/main/config.ini
 1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/)
 2. Navigate to "Workers & Pages"
 3. Click "Create Application" and select "Worker"
-4. Click "Create Worker" and give it a name
-5. Replace the code with the content of `src/index.js`
-6. Click "Save and Deploy"
-7. After deployment, go to "Settings" → "Variables"
-8. Add a secret variable named `GITHUB_TOKEN` with your GitHub personal access token as the value
-9. Click "Save and Deploy" again
+4. Replace the code with the content of `src/index.js`
+5. Click "Save and Deploy"
+6. Go to **Settings → Variables** and add `GITHUB_TOKENS` (JSON) and/or `GITHUB_TOKEN`
+7. Click "Save and Deploy" again
 
-### Option 2: Manual Deployment via Cloudflare Pages
+### Option 2: Wrangler CLI
 
-1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. Navigate to "Workers & Pages"
-3. Click "Create Application" and select "Pages"
-4. Connect to your GitHub repository
-5. Configure build settings:
-   - Build command: `npm run build` 
-   - Build output directory: `public`
-   - Root directory: `/` (default)
-6. Under "Environment variables", add a secret variable:
-   - Variable name: `GITHUB_TOKEN`
-   - Value: Your GitHub personal access token
-7. Click "Save and Deploy"
-8. After deployment, go to "Functions" tab
-9. Enable "Pages Functions" if not already enabled
-10. Verify that your static site exists at your Pages URL, but the real functionality 
-    will be through the Worker Function code in `src/index.js`
-
-### Option 3: Manual Deployment via Wrangler CLI
-
-1. Install Wrangler CLI:
+1. Install Wrangler:
    ```
    npm install -g wrangler
    ```
@@ -120,16 +131,20 @@ https://cdn.example.com/gh/username/repo-name/blob/main/config.ini
    wrangler login
    ```
 
-3. Set up your GitHub token as a secret:
+3. Set secrets:
    ```
+   wrangler secret put GITHUB_TOKENS
+   # paste the JSON string when prompted
+
+   # optional single-token fallback
    wrangler secret put GITHUB_TOKEN
    ```
-   (You'll be prompted to enter your token)
 
-4. Deploy to Cloudflare:
+4. Deploy:
    ```
-   wrangler publish
+   wrangler deploy
    ```
+
 ## Usage Examples
 
 ### For Web Resources
@@ -147,34 +162,27 @@ https://cdn.example.com/releases/electron/electron/download/v28.1.0/electron-v28
 
 ### Direct Linking in Documentation
 
-The raw format is convenient for documentation:
-
 ```markdown
 Download the file from [here](https://cdn.example.com/raw/username/repo/main/filename.ext)
 ```
 
 ## Security Considerations
 
-- Your GitHub token is stored securely as an encrypted environment variable
-- Only grant read permissions to your token
-- Consider setting an expiration date on your GitHub token
-- Rotate your token periodically
+- Tokens are stored as encrypted secrets, never in plain text
+- Grant only `read` (contents) permission to each token
+- Consider setting an expiration date on your GitHub tokens
+- Rotate tokens periodically
 
 ## Limitations
 
-- Maximum file size: 25MB (Cloudflare Worker limit)
+- Maximum file size: 25 MB (Cloudflare Worker limit)
 - Request timeout: 30 seconds
 
 ## Troubleshooting
 
-If you encounter a 404 error:
-- Verify that the repository path is correct
-- Check that your token has access to the repository
-- Ensure the branch name is correct
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- **404** – verify the repository path, branch name, and that the token has access
+- **401** – the token for that username is missing or invalid; check `GITHUB_TOKENS`
+- **JSON parse error in logs** – `GITHUB_TOKENS` value is not valid JSON
 
 ## License
 
