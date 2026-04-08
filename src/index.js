@@ -44,9 +44,13 @@ async function fetchFromGitHub(githubUrl, token, cacheMaxAge, defaultContentType
   const response = await fetch(githubUrl, { headers });
 
   if (!response.ok) {
-    return new Response(`GitHub API error: ${response.status} ${response.statusText}`, {
-      status: response.status,
-    });
+    const debugInfo = [
+      `GitHub API error: ${response.status} ${response.statusText}`,
+      `URL: ${githubUrl}`,
+      `Token present: ${!!token}`,
+      `Response headers: ${JSON.stringify(Object.fromEntries(response.headers))}`,
+    ].join('\n');
+    return new Response(debugInfo, { status: response.status });
   }
 
   const content = await response.arrayBuffer();

@@ -36,9 +36,13 @@ export async function onRequest(context) {
       });
       
       if (!response.ok) {
-        return new Response(`GitHub API error: ${response.status} ${response.statusText}`, { 
-          status: response.status 
-        });
+        const debugInfo = [
+          `GitHub API error: ${response.status} ${response.statusText}`,
+          `URL: ${githubUrl}`,
+          `Token present: ${!!GITHUB_TOKEN}`,
+          `Response headers: ${JSON.stringify(Object.fromEntries(response.headers))}`,
+        ].join('\n');
+        return new Response(debugInfo, { status: response.status });
       }
       
       // Get the response as a stream instead of buffering (more efficient)
@@ -78,9 +82,13 @@ export async function onRequest(context) {
         });
         
         if (!response.ok) {
-          return new Response(`GitHub API error: ${response.status} ${response.statusText}`, { 
-            status: response.status 
-          });
+          const debugInfo = [
+            `GitHub API error: ${response.status} ${response.statusText}`,
+            `URL: ${githubUrl}`,
+            `Token present: ${!!GITHUB_TOKEN}`,
+            `Response headers: ${JSON.stringify(Object.fromEntries(response.headers))}`,
+          ].join('\n');
+          return new Response(debugInfo, { status: response.status });
         }
         
         const contentType = response.headers.get('content-type') || 'application/octet-stream';
@@ -120,9 +128,13 @@ export async function onRequest(context) {
         });
         
         if (!response.ok) {
-          return new Response(`GitHub API error: ${response.status} ${response.statusText}`, { 
-            status: response.status 
-          });
+          const debugInfo = [
+            `GitHub API error: ${response.status} ${response.statusText}`,
+            `URL: ${githubUrl}`,
+            `Token present: ${!!GITHUB_TOKEN}`,
+            `Response headers: ${JSON.stringify(Object.fromEntries(response.headers))}`,
+          ].join('\n');
+          return new Response(debugInfo, { status: response.status });
         }
         
         const contentType = response.headers.get('content-type') || 'text/plain';
@@ -168,9 +180,13 @@ export async function onRequest(context) {
       });
       
       if (!response.ok) {
-        return new Response(`GitHub API error: ${response.status} ${response.statusText}`, { 
-          status: response.status 
-        });
+        const debugInfo = [
+          `GitHub API error: ${response.status} ${response.statusText}`,
+          `URL: ${githubUrl}`,
+          `Token present: ${!!GITHUB_TOKEN}`,
+          `Response headers: ${JSON.stringify(Object.fromEntries(response.headers))}`,
+        ].join('\n');
+        return new Response(debugInfo, { status: response.status });
       }
       
       const contentType = response.headers.get('content-type') || 'text/plain';
