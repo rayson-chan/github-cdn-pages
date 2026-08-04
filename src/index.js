@@ -35,8 +35,17 @@ function authHeader(token) {
   return token ? `token ${token}` : undefined;
 }
 
+/** Fetch Helper */
+async function fetchFromGitHubNoCache(githubUrl, token, defaultContentType = 'text/plain') {
+  return fetchFromGitHub(githubUrl, token, 'no-store, no-cache, must-revalidate', defaultContentType);
+}
+
+async function fetchFromGitHubWithMaxAge(githubUrl, token, maxAge = 30, defaultContentType = 'text/plain') {
+  return fetchFromGitHub(githubUrl, token, `public, max-age=${maxAge}`, defaultContentType);
+}
+
 /** Common fetch helper – returns a Response. */
-async function fetchFromGitHub(githubUrl, token, cacheMaxAge, defaultContentType) {
+async function fetchFromGitHub(githubUrl, token, cacheControl, defaultContentType) {
   const headers = { 'User-Agent': 'GitHub-CDN-Worker' };
   const auth = authHeader(token);
   if (auth) headers['Authorization'] = auth;
@@ -59,7 +68,7 @@ async function fetchFromGitHub(githubUrl, token, cacheMaxAge, defaultContentType
   return new Response(content, {
     headers: {
       'Content-Type': contentType,
-      'Cache-Control': `public, max-age=${cacheMaxAge}`,
+      'Cache-Control': cacheControl, // 动态使用传入的 Cache-Control
       'Access-Control-Allow-Origin': '*',
     },
   });
@@ -84,7 +93,7 @@ export default {
       const token = resolveToken(env, username);
 
       try {
-        return await fetchFromGitHub(githubUrl, token, 1800, 'text/plain');
+        return await fetchFromGitHubNoCache(githubUrl, token, 'text/plain');
       } catch (error) {
         return new Response(
           `Error fetching content: ${error.message}\nPath: ${path}\nExtracted URL: ${githubUrl}`,
@@ -102,7 +111,7 @@ export default {
       const token = resolveToken(env, username);
 
       try {
-        return await fetchFromGitHub(githubUrl, token, 86400, 'application/octet-stream');
+        return await fetchFromGitHubWithMaxAge(githubUrl, token, 86400, 'application/octet-stream');
       } catch (error) {
         return new Response(`Error fetching release content: ${error.message}`, { status: 500 });
       }
@@ -119,7 +128,7 @@ export default {
         const token = resolveToken(env, username);
 
         try {
-          return await fetchFromGitHub(githubUrl, token, 1800, 'text/plain');
+          return await fetchFromGitHubNoCache(githubUrl, token, 'text/plain');
         } catch (error) {
           return new Response(`Error fetching raw content: ${error.message}`, { status: 500 });
         }
@@ -150,7 +159,7 @@ export default {
       const token = resolveToken(env, username);
 
       try {
-        return await fetchFromGitHub(githubUrl, token, 1800, 'text/plain');
+        return await fetchFromGitHubNoCache(githubUrl, token, 'text/plain');
       } catch (error) {
         return new Response(`Error fetching content: ${error.message}`, { status: 500 });
       }

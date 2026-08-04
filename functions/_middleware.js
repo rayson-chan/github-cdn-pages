@@ -20,6 +20,14 @@ function authHeaders(token) {
   };
 }
 
+async function proxyGitHubNoCache(githubUrl, token, defaultContentType = 'text/plain') {
+  return proxyGitHub(githubUrl, token, 'no-store, no-cache, must-revalidate', defaultContentType);
+}
+
+async function proxyGitHubWithMaxAge(githubUrl, token, maxAge = 30, defaultContentType = 'text/plain') {
+  return proxyGitHub(githubUrl, token, `public, max-age=${maxAge}`, defaultContentType);
+}
+
 async function proxyGitHub(githubUrl, token, cacheControl, defaultContentType) {
   const response = await fetch(githubUrl, { headers: authHeaders(token) });
 
@@ -61,7 +69,7 @@ export async function onRequest(context) {
     const match = githubUrl.match(/raw\.githubusercontent\.com\/([^/]+)/);
     const token = resolveToken(env, match ? match[1] : null);
     try {
-      return await proxyGitHub(githubUrl, token, 'no-store, no-cache, must-revalidate', 'text/plain');
+      return await proxyGitHubNoCache(githubUrl, token, 'text/plain');
     } catch (error) {
       return new Response(`Error fetching content: ${error.message}\nPath: ${path}\nExtracted URL: ${githubUrl}`, { status: 500 });
     }
@@ -74,7 +82,8 @@ export async function onRequest(context) {
     const githubUrl = `https://github.com/${username}/${repo}/releases/download/${releasePathAndFile}`;
     const token = resolveToken(env, username);
     try {
-      return await proxyGitHub(githubUrl, token, 'no-store, no-cache, must-revalidate', 'application/octet-stream');
+      // Releases 通常保留长缓存
+      return await proxyGitHubWithMaxAge(githubUrl, token, 86400, 'application/octet-stream');
     } catch (error) {
       return new Response(`Error fetching release content: ${error.message}`, { status: 500 });
     }
@@ -88,7 +97,7 @@ export async function onRequest(context) {
       const githubUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/${rest.join('/')}`;
       const token = resolveToken(env, username);
       try {
-        return await proxyGitHub(githubUrl, token, 'public, max-age=1800', 'text/plain');
+        return await proxyGitHubNoCache(githubUrl, token, 'text/plain');
       } catch (error) {
         return new Response(`Error fetching raw content: ${error.message}`, { status: 500 });
       }
@@ -109,7 +118,7 @@ export async function onRequest(context) {
     const githubUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/${rest.join('/')}`;
     const token = resolveToken(env, username);
     try {
-      return await proxyGitHub(githubUrl, token, 'public, max-age=1800', 'text/plain');
+      return await proxyGitHubNoCache(githubUrl, token, 'text/plain');
     } catch (error) {
       return new Response(`Error fetching content: ${error.message}`, { status: 500 });
     }
